@@ -20,7 +20,22 @@
 import com.tom.rv2ide.build.config.BuildConfig
 import com.tom.rv2ide.desugaring.utils.JavaIOReplacements.applyJavaIOReplacements
 import com.tom.rv2ide.plugins.AndroidIDEAssetsPlugin
+import java.io.File
 import java.util.Properties
+
+// টার্মিনাল ছাড়া স্বয়ংক্রিয়ভাবে aidl ফাইল ফিক্স করার কোড
+run {
+    try {
+        val srcAidl = File("/data/user/0/com.tom.rv2ide/files/home/android-sdk/build-tools/34.0.0/aidl")
+        val destAidl = File("/data/user/0/com.tom.rv2ide/files/home/android-sdk/build-tools/35.0.0/aidl")
+        if (srcAidl.exists() && destAidl.parentFile?.exists() == true) {
+            srcAidl.copyTo(destAidl, overwrite = true)
+            destAidl.setExecutable(true, false)
+        }
+    } catch (e: Exception) {
+        // Ignored
+    }
+}
 
 plugins {
   id("com.tom.rv2ide.core-app")
@@ -63,15 +78,14 @@ configurations.all {
 }
 
 android {
-  namespace = BuildConfig.packageName
+  namespace = "com.androidai.studio"
 
   defaultConfig {
-    applicationId = BuildConfig.packageName
+    applicationId = "com.androidai.studio"
     vectorDrawables.useSupportLibrary = true
   }
   
   experimentalProperties["android.experimental.enableGlobalSynthetics"] = true
-  
 
   signingConfigs {
       create("custom") {
@@ -137,7 +151,6 @@ android {
                   variantName.contains("arm64") -> "arm64-v8a"
                   variantName.contains("armeabi") || variantName.contains("arm7") -> "armeabi-v7a"
                   else -> {
-                    // This should not happen with our configuration
                     throw IllegalStateException(
                         "Could not determine ABI for variant: $variantName. Expected arm64-v8a or armeabi-v7a."
                     )
@@ -151,7 +164,7 @@ android {
         )
       }
 
-      val appName = "android-code-studio"
+      val appName = "android-ai-studio"
       val fileName =
           if (buildType == "release") {
             "${appName}-${archSuffix}-${versionName}.apk"
@@ -168,7 +181,7 @@ android {
   }
 }
 
-kapt { arguments { arg("eventBusIndex", "${BuildConfig.packageName}.events.AppEventsIndex") } }
+kapt { arguments { arg("eventBusIndex", "com.androidai.studio.events.AppEventsIndex") } }
 
 desugaring {
   replacements {
@@ -180,9 +193,7 @@ desugaring {
   }
 }
 
-
 dependencies {
-  // debugImplementation(libs.common.leakcanary)
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
   implementation("org.tukaani:xz:1.9")
   implementation("org.apache.commons:commons-compress:1.21")
@@ -194,7 +205,7 @@ dependencies {
   implementation(projects.external.atc) 
   implementation(libs.external.customizable.cardview)
   implementation(projects.external.logwire)
-	implementation(libs.external.seasonal.effects)
+  implementation(libs.external.seasonal.effects)
   
   // Annotation processors
   kapt(libs.common.glide.ap)
@@ -222,7 +233,6 @@ dependencies {
     exclude(group = "org.slf4j", module = "slf4j-nop")
   }
   
-  // TODO: remove this
   implementation("com.github.MiyazKaori:SilentInstaller:1.0.0-alpha")
 
   // Git
@@ -256,7 +266,6 @@ dependencies {
   // Dependencies in composite build
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
-  // implementation(libs.composite.javapoet)
   implementation(files(rootProject.file("composite-builds/build-deps/libs/javapoet.jar")))
 
   // Local projects here
@@ -297,8 +306,5 @@ dependencies {
   implementation(projects.xml.lsp)
   implementation(projects.xml.utils)
 
-  // This is to build the tooling-api-impl project before the app is built
-  // So we always copy the latest JAR file to assets
   compileOnly(projects.tooling.impl)
-  
 }
