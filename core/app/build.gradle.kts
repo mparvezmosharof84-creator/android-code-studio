@@ -1,41 +1,9 @@
-/*
- *  This file is part of AndroidIDE.
- *
- *  AndroidIDE is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  AndroidIDE is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 @file:Suppress("UnstableApiUsage")
 
 import com.tom.rv2ide.build.config.BuildConfig
 import com.tom.rv2ide.desugaring.utils.JavaIOReplacements.applyJavaIOReplacements
 import com.tom.rv2ide.plugins.AndroidIDEAssetsPlugin
-import java.io.File
 import java.util.Properties
-
-// টার্মিনাল ছাড়া স্বয়ংক্রিয়ভাবে aidl ফাইল ফিক্স করার কোড
-run {
-    try {
-        val srcAidl = File("/data/user/0/com.tom.rv2ide/files/home/android-sdk/build-tools/34.0.0/aidl")
-        val destAidl = File("/data/user/0/com.tom.rv2ide/files/home/android-sdk/build-tools/35.0.0/aidl")
-        if (srcAidl.exists() && destAidl.parentFile?.exists() == true) {
-            srcAidl.copyTo(destAidl, overwrite = true)
-            destAidl.setExecutable(true, false)
-        }
-    } catch (e: Exception) {
-        // Ignored
-    }
-}
 
 plugins {
   id("com.tom.rv2ide.core-app")
@@ -91,10 +59,8 @@ android {
       create("custom") {
           val keyStorePath = "${rootProject.projectDir}/signing/signing-key.jks"
           val keyStoreFile = file(keyStorePath)
-          
           val signing_storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: ""
           val signing_keyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: ""
-          
           storeFile = keyStoreFile
           storePassword = signing_storePassword
           keyAlias = "androidcs"
@@ -137,46 +103,21 @@ android {
     val variant = this
     variant.outputs.all {
       val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-
       val versionName = variant.versionName ?: "unknown"
       val versionCode = variant.versionCode
       val buildType = variant.buildType.name
       val filters = output.filters
       val abiFilter = filters.find { it.filterType == "ABI" }
-      val archSuffix =
-          abiFilter?.identifier
-              ?: run {
-                val variantName = variant.name.lowercase()
-                when {
-                  variantName.contains("arm64") -> "arm64-v8a"
-                  variantName.contains("armeabi") || variantName.contains("arm7") -> "armeabi-v7a"
-                  else -> {
-                    throw IllegalStateException(
-                        "Could not determine ABI for variant: $variantName. Expected arm64-v8a or armeabi-v7a."
-                    )
-                  }
-                }
-              }
-
-      if (archSuffix !in listOf("arm64-v8a", "armeabi-v7a")) {
-        throw IllegalStateException(
-            "Unsupported architecture: $archSuffix. Only arm64-v8a and armeabi-v7a are supported."
-        )
-      }
+      val archSuffix = abiFilter?.identifier ?: "arm64-v8a"
 
       val appName = "android-ai-studio"
-      val fileName =
-          if (buildType == "release") {
-            "${appName}-${archSuffix}-${versionName}.apk"
-          } else {
-            "${appName}-${archSuffix}-${buildType}-${versionName}.apk"
-          }
+      val fileName = if (buildType == "release") {
+        "${appName}-${archSuffix}-${versionName}.apk"
+      } else {
+        "${appName}-${archSuffix}-${buildType}-${versionName}.apk"
+      }
 
       output.outputFileName = fileName
-
-      println(
-          "Generated APK: $fileName for variant: ${variant.name}, arch: $archSuffix, versionCode: $versionCode"
-      )
     }
   }
 }
@@ -185,10 +126,7 @@ kapt { arguments { arg("eventBusIndex", "com.androidai.studio.events.AppEventsIn
 
 desugaring {
   replacements {
-    includePackage(
-        "org.eclipse.jgit",
-    )
-
+    includePackage("org.eclipse.jgit")
     applyJavaIOReplacements()
   }
 }
@@ -197,8 +135,6 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
   implementation("org.tukaani:xz:1.9")
   implementation("org.apache.commons:commons-compress:1.21")
-
-  // external deps here
   implementation("com.github.Dimezis:BlurView:version-3.2.0")
   implementation("androidx.security:security-crypto:1.1.0-alpha06")
   implementation(projects.external.acsprovider)
@@ -207,7 +143,6 @@ dependencies {
   implementation(projects.external.logwire)
   implementation(libs.external.seasonal.effects)
   
-  // Annotation processors
   kapt(libs.common.glide.ap)
   kapt(libs.google.auto.service)
   kapt(projects.annotation.processors)
@@ -234,11 +169,8 @@ dependencies {
   }
   
   implementation("com.github.MiyazKaori:SilentInstaller:1.0.0-alpha")
-
-  // Git
   implementation(libs.git.jgit)
 
-  // AndroidX
   implementation(libs.androidx.splashscreen)
   implementation(libs.androidx.annotation)
   implementation(libs.androidx.appcompat)
@@ -259,16 +191,13 @@ dependencies {
   implementation(libs.google.material)
   implementation(libs.google.flexbox)
 
-  // Kotlin
   implementation(libs.androidx.core.ktx)
   implementation(libs.common.kotlin)
 
-  // Dependencies in composite build
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
   implementation(files(rootProject.file("composite-builds/build-deps/libs/javapoet.jar")))
 
-  // Local projects here
   implementation(projects.core.projectdata)
   implementation(projects.ideconfigurations)
   implementation(projects.core.actions)
