@@ -46,9 +46,11 @@ configurations.all {
 }
 
 android {
-  namespace = "com.androidai.studio"
+  // ভেতরের কোডের ইন্টারনাল বাইন্ডিংয়ের জন্য namespace
+  namespace = "com.tom.rv2ide"
 
   defaultConfig {
+    // ফোনের মূল প্যাকেজ আইডি যা আপনার নামে তৈরি হবে
     applicationId = "com.androidai.studio"
     vectorDrawables.useSupportLibrary = true
   }
@@ -122,7 +124,7 @@ android {
   }
 }
 
-kapt { arguments { arg("eventBusIndex", "com.androidai.studio.events.AppEventsIndex") } }
+kapt { arguments { arg("eventBusIndex", "com.tom.rv2ide.events.AppEventsIndex") } }
 
 desugaring {
   replacements {
