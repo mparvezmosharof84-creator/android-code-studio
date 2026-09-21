@@ -46,29 +46,14 @@ configurations.all {
 }
 
 android {
-  // ভেতরের কোডের ইন্টারনাল বাইন্ডিংয়ের জন্য namespace
   namespace = "com.tom.rv2ide"
 
   defaultConfig {
-    // ফোনের মূল প্যাকেজ আইডি যা আপনার নামে তৈরি হবে
     applicationId = "com.androidai.studio"
     vectorDrawables.useSupportLibrary = true
   }
   
   experimentalProperties["android.experimental.enableGlobalSynthetics"] = true
-
-  signingConfigs {
-      create("custom") {
-          val keyStorePath = "${rootProject.projectDir}/signing/signing-key.jks"
-          val keyStoreFile = file(keyStorePath)
-          val signing_storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: ""
-          val signing_keyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: ""
-          storeFile = keyStoreFile
-          storePassword = signing_storePassword
-          keyAlias = "androidcs"
-          keyPassword = signing_keyPassword
-      }
-  }
 
   androidResources { generateLocaleConfig = true }
 
@@ -79,12 +64,13 @@ android {
 
   buildTypes {
     debug {
-      signingConfig = signingConfigs.getByName("custom")
+      // স্ট্যান্ডার্ড অটোমেটিক সাইনিং (পাসওয়ার্ডের প্রয়োজন নেই)
+      signingConfig = signingConfigs.getByName("debug")
     }
 
     release {
       isShrinkResources = false
-      signingConfig = signingConfigs.getByName("custom")
+      signingConfig = signingConfigs.getByName("debug")
     }
   }
   
