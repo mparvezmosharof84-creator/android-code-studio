@@ -30,6 +30,11 @@ jobs:
       - name: Change Gradle wrapper permissions
         run: chmod +x ./gradlew
 
+      # Termux-এর সব ফাইল স্বয়ংক্রিয়ভাবে নতুন প্যাকেজ নামে রূপান্তর করা
+      - name: Auto Fix Termux Package Name
+        run: |
+          find termux -type f \( -name "*.java" -o -name "*.kt" \) -exec sed -i 's/com.tom.rv2ide/com.androidai.studio/g' {} +
+
       - name: Create Missing Directories
         run: |
           mkdir -p core/app/build/intermediates/external_file_lib_dex_archives/debug/desugarDebugFileDependencies
@@ -43,7 +48,7 @@ jobs:
           find core/app/build/outputs/apk/debug/ -name "*.apk" -exec cp {} release-apks/ \;
           ls -lh release-apks/
 
-      # কোনো জিপ ফাইল ছাড়া সরাসরি রঅ APK রিলিজ তৈরি করার স্টেপ
+      # কোনো জিপ ছাড়া সরাসরি রঅ APK রিলিজ করা
       - name: Release Direct APKs
         uses: softprops/action-gh-release@v2
         if: always()
