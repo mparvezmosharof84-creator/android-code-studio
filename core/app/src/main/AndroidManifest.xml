@@ -7,11 +7,11 @@
   <permission
     android:description="@string/permdesc_bind_logger_service"
     android:label="@string/permlab_bind_logger_service"
-    android:name="com.androidai.studio.permission.BIND_LOG_SERVICE"
+    android:name="com.tom.rv2ide.permission.BIND_LOG_SERVICE"
     android:protectionLevel="normal"
     tools:ignore="ManifestOrder" />
 
-  <uses-permission android:name="com.androidai.studio.permission.BIND_LOG_SERVICE" />
+  <uses-permission android:name="com.tom.rv2ide.permission.BIND_LOG_SERVICE" />
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -43,12 +43,13 @@
     android:theme="@style/Theme.AndroidIDE"
     android:networkSecurityConfig="@xml/network_security_config"
     tools:ignore="DiscouragedApi,MediaCapabilities,UnusedAttribute">
+    
     <activity
       android:exported="true"
       android:name=".activities.CrashHandlerActivity"
       android:windowSoftInputMode="stateAlwaysHidden">
       <intent-filter>
-        <action android:name="com.androidai.studio.REPORT_CRASH" />
+        <action android:name="com.tom.rv2ide.REPORT_CRASH" />
         <category android:name="android.intent.category.DEFAULT" />
       </intent-filter>
     </activity>
@@ -62,6 +63,7 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+    
     <activity
       android:exported="false"
       android:name=".activities.OnboardingActivity" />
@@ -108,8 +110,9 @@
       android:exported="false"
       android:theme="@style/Theme.AndroidIDE" />
 
+    <!-- বাইন্ডিং ফিক্স: এটি IDEDocumentsProvider-এর সাথে সঠিক সংযোগ রক্ষা করবে -->
     <provider
-      android:authorities="com.androidai.studio.documents"
+      android:authorities="com.tom.rv2ide.documents"
       android:exported="true"
       android:grantUriPermissions="true"
       android:name=".provider.IDEDocumentsProvider"
@@ -145,7 +148,7 @@
       android:name=".services.InstallationResultReceiver"
       tools:ignore="ExportedReceiver">
       <intent-filter>
-        <action android:name="com.androidai.studio.installer.INSTALL_PACKAGE" />
+        <action android:name="com.tom.rv2ide.installer.INSTALL_PACKAGE" />
       </intent-filter>
     </receiver>
 
@@ -162,8 +165,7 @@
     <service
       android:name="io.github.mohammedbaqernull.logger.service.LogReceiverService"
       android:enabled="true"
-      android:exported="true">
-    </service>
+      android:exported="true" />
 
     <service
       android:enabled="false"
