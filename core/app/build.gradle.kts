@@ -49,7 +49,7 @@ android {
   namespace = "com.tom.rv2ide"
 
   defaultConfig {
-    applicationId = "com.androidai.studio"
+    applicationId = "com.tom.rv2ide"
     vectorDrawables.useSupportLibrary = true
   }
   
@@ -64,7 +64,6 @@ android {
 
   buildTypes {
     debug {
-      // স্ট্যান্ডার্ড অটোমেটিক সাইনিং (পাসওয়ার্ডের প্রয়োজন নেই)
       signingConfig = signingConfigs.getByName("debug")
     }
 
