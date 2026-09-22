@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- App Name & Owner Branding -->
   <string name="app_name" translatable="false">Android AI Studio</string>
   <string name="developer_name" translatable="false">Parvez Mosharof</string>
+  
+  <!-- অটো আপডেট চিরতরে বন্ধ করার কনফিগ -->
+  <bool name="enable_update_checker">false</bool>
+  <string name="update_check_url">""</string>
   
   <string name="asset_studio_title">Asset Studio</string>
   <string name="asset_studio_subtitle">Drawable &amp; Icon Maker</string>
