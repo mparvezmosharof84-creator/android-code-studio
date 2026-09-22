@@ -7,20 +7,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.ScrollView
-import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.BlockThreshold
 import com.google.ai.client.generativeai.type.HarmCategory
 import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.content
+import com.tom.rv2ide.R
+import com.tom.rv2ide.databinding.FragmentChatBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,21 +28,16 @@ import java.io.File
 import java.util.regex.Pattern
 
 /**
- * Android AI Studio - Autonomous AI App Builder
- * Owner & Creator: Parvez Mosharof
+ * Android AI Studio - Master AI Agent
+ * Creator & Owner: Parvez Mosharof
  */
 class ChatFragment : Fragment() {
 
-    companion object {
-        @JvmStatic
-        fun newInstance(): ChatFragment = ChatFragment()
-    }
+    private var _binding: FragmentChatBinding? = null
+    val binding get() = _binding!!
 
-    // কোড কমপ্লিশন সাপোর্টের জন্য ডামি ম্যানেজার
-    fun getCodeCompletionManager(): Any? = null
-
-    // আপনার ব্যক্তিগত মাস্টার API Key (সরাসরি বিল্ট-ইন)
-    private val masterApiKey = "AQ.Ab8RN6JtbJDWXrBmn0OcRxopbMSmj610JyEl0h3sFu6yQYgBUw"
+    // আপনার দেওয়া মাস্টার API Key (সরাসরি বিল্ট-ইন করা)
+    private val masterApiKey: String = "AQ.Ab8RN6JtbJDWXrBmn0OcRxopbMSmj610JyEl0h3sFu6yQYgBUw"
 
     // ফিল্টারমুক্ত সিকিউরিটি কনফিগ (BLOCK_NONE)
     private val safetyConfig = listOf(
@@ -53,13 +48,13 @@ class ChatFragment : Fragment() {
     )
 
     private val masterInstruction = """
-        You are the Master Autonomous App Builder inside Android AI Studio, created for Parvez Mosharof.
-        Your mission is to build real, fully functional Android apps with production-grade logic. No placeholders, no TODOs.
+        You are the Master Autonomous App Builder inside Android AI Studio, serving your creator Parvez Mosharof.
+        Your goal is to build real, fully functional, production-ready Android apps with complete logic. No dummy/sample code.
         
         RULES:
         1. Keep the user's project settings (package name, language, SDK) exactly as configured.
-        2. Format every file strictly like this:
-           <<<FILE:relative/path/to/file.ext>>>
+        2. Format every file you create or update strictly like this:
+           <<<FILE:relative/path/to/filename.ext>>>
            [Complete code here]
            <<<END_FILE>>>
         3. Output <<<BUILD_READY>>> at the end.
@@ -74,97 +69,53 @@ class ChatFragment : Fragment() {
         )
     }
 
-    private lateinit var etPrompt: EditText
-    private lateinit var btnSend: Button
-    private lateinit var chatContainer: LinearLayout
-    private lateinit var scrollView: ScrollView
-    private lateinit var progressBar: ProgressBar
+    companion object {
+        @JvmStatic
+        fun newInstance(): ChatFragment = ChatFragment()
+    }
+
+    // সাইডবারের মিসিং রেফারেন্স ফিক্স
+    fun getCodeCompletionManager(): Any? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        val context = requireContext()
-
-        // সরাসরি ডায়নামিক UI তৈরি (কোনো মিসিং R.id ক্র্যাশ হবে না)
-        val mainLayout = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(0xFF181A1F.toInt())
-            setPadding(20, 20, 20, 20)
-        }
-
-        scrollView = ScrollView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.0f
-            )
-        }
-
-        chatContainer = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-        scrollView.addView(chatContainer)
-        mainLayout.addView(scrollView)
-
-        progressBar = ProgressBar(context).apply {
-            visibility = View.GONE
-        }
-        mainLayout.addView(progressBar)
-
-        val inputBar = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        etPrompt = EditText(context).apply {
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f)
-            hint = "কী অ্যাপ বানাতে চান লিখুন..."
-            setTextColor(0xFFFFFFFF.toInt())
-            setHintTextColor(0xFF888888.toInt())
-            setBackgroundColor(0xFF21252B.toInt())
-            setPadding(25, 20, 25, 20)
-        }
-        inputBar.addView(etPrompt)
-
-        btnSend = Button(context).apply {
-            text = "Send"
-            setBackgroundColor(0xFF4CAF50.toInt())
-            setTextColor(0xFFFFFFFF.toInt())
-            setOnClickListener {
-                val userText = etPrompt.text.toString().trim()
-                if (userText.isNotEmpty()) {
-                    addMessageToChat("User: $userText", false)
-                    etPrompt.setText("")
-                    processAppBuilding(userText)
-                }
-            }
-        }
-        inputBar.addView(btnSend)
-        mainLayout.addView(inputBar)
-
-        addMessageToChat("👋 স্বাগতম মাস্টার Parvez Mosharof! আমি আপনার Android AI Studio বিল্ডার। আপনি কী অ্যাপ বা ফিচার তৈরি করতে চান বলুন, আমি রিয়েল কোড লিখে প্রজেক্টে বসিয়ে দিচ্ছি।", true)
-
-        return mainLayout
+        _binding = FragmentChatBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    private fun processAppBuilding(prompt: String) {
-        progressBar.visibility = View.VISIBLE
-        addMessageToChat("⚡ AI Studio: ফাইল জেনারেট ও প্রজেক্ট কোডিং শুরু হয়েছে...", true)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // আসল বাটনে লিসেনার সেট করা
+        try {
+            binding.btnSend.setOnClickListener {
+                val prompt = binding.etPrompt.text?.toString()?.trim() ?: ""
+                if (prompt.isNotEmpty()) {
+                    binding.etPrompt.setText("")
+                    handleUserPrompt(prompt)
+                }
+            }
+
+            binding.btnClear.setOnClickListener {
+                binding.etPrompt.setText("")
+            }
+        } catch (ignored: Exception) {}
+    }
+
+    private fun handleUserPrompt(prompt: String) {
+        binding.tvStatus.text = "⚡ AI Studio: আপনার নির্দেশে কোড লেখা ও ফাইল প্রসেসিং শুরু হয়েছে..."
+        binding.tvStatus.visibility = View.VISIBLE
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val response = generativeModel.generateContent(prompt)
-                val reply = response.text ?: "কোনো রেসপন্স পাওয়া যায়নি।"
+                val replyText = response.text ?: "কোনো রেসপন্স পাওয়া যায়নি।"
 
+                // প্রজেক্টের সঠিক রুটে ফাইলগুলো সংরক্ষণ করা
                 val projectRoot = activity?.filesDir?.parentFile ?: File("/storage/emulated/0/")
                 val filePattern = Pattern.compile("<<<FILE:(.*?)>>>(.*?)<<<END_FILE>>>", Pattern.DOTALL)
-                val matcher = filePattern.matcher(reply)
+                val matcher = filePattern.matcher(replyText)
                 var fileCount = 0
 
                 while (matcher.find()) {
@@ -177,60 +128,29 @@ class ChatFragment : Fragment() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
-                    addMessageToChat("✅ $fileCount টি ফাইল সরাসরি প্রজেক্টে যুক্ত হয়েছে! কোড এডিটরেও দেখতে পাবেন।", true)
-                    displayAppActionCard(projectRoot)
+                    binding.tvStatus.text = "✅ সফল! $fileCount টি ফাইল প্রজেক্টে সেভ হয়েছে। ম্যানুয়াল এডিটরেও দেখতে পাবেন।"
+                    checkForApkAndNotify(projectRoot)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
-                    addMessageToChat("ত্রুটি: ${e.localizedMessage}", true)
+                    binding.tvStatus.text = "ত্রুটি: ${e.localizedMessage}"
                 }
             }
         }
     }
 
-    private fun displayAppActionCard(projectDir: File) {
-        val card = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(35, 35, 35, 35)
-            setBackgroundColor(0xFF282C34.toInt())
-        }
-
-        val tvTitle = TextView(requireContext()).apply {
-            text = "🎉 App Ready! নিচের বাটন থেকে অ্যাকশন নিন:"
-            textSize = 15f
-            setTextColor(0xFF4CAF50.toInt())
-        }
-        card.addView(tvTitle)
-
-        val btnInstall = Button(requireContext()).apply {
-            text = "🚀 Install APK"
-            setBackgroundColor(0xFF2E7D32.toInt())
-            setOnClickListener {
-                findAndInstallApk(projectDir)
-            }
-        }
-        card.addView(btnInstall)
-
-        val btnDownloadAab = Button(requireContext()).apply {
-            text = "📦 Download / Share AAB Bundle"
-            setBackgroundColor(0xFF1565C0.toInt())
-            setOnClickListener {
-                findAndShareAab(projectDir)
-            }
-        }
-        card.addView(btnDownloadAab)
-
-        chatContainer.addView(card)
-        scrollView.post { scrollView.fullScroll(View.FOCUS_DOWN) }
-    }
-
-    private fun findAndInstallApk(baseDir: File) {
+    private fun checkForApkAndNotify(baseDir: File) {
         val apkFile = File(baseDir, "app/build/outputs/apk/debug").listFiles()?.firstOrNull { it.name.endsWith(".apk") }
             ?: File("/storage/emulated/0/Download").listFiles()?.firstOrNull { it.name.endsWith(".apk") }
 
         if (apkFile != null && apkFile.exists()) {
+            Toast.makeText(requireContext(), "APK তৈরি হয়েছে! ইনস্টল করার জন্য ফাইলটি ওপেন করুন।", Toast.LENGTH_LONG).show()
+            installApk(apkFile)
+        }
+    }
+
+    private fun installApk(apkFile: File) {
+        try {
             val uri: Uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", apkFile)
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
@@ -238,34 +158,13 @@ class ChatFragment : Fragment() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(intent)
-        } else {
-            addMessageToChat("APK ফাইলটি পাওয়ার জন্য ওপরের Run (▶️) বাটনে চাপ দিয়ে একবার বিল্ড সম্পন্ন করুন।", true)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "ইনস্টলার খুলতে সমস্যা: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun findAndShareAab(baseDir: File) {
-        val aabFile = File(baseDir, "app/build/outputs/bundle/release").listFiles()?.firstOrNull { it.name.endsWith(".aab") }
-        if (aabFile != null && aabFile.exists()) {
-            val uri: Uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", aabFile)
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/octet-stream"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(Intent.createChooser(shareIntent, "Share AAB Bundle"))
-        } else {
-            addMessageToChat("AAB বান্ডেল ফাইল পাওয়া যায়নি। প্রোজেক্ট থেকে Bundle জেনারেট করে নিন।", true)
-        }
-    }
-
-    private fun addMessageToChat(message: String, isAi: Boolean) {
-        val tv = TextView(requireContext()).apply {
-            text = message
-            textSize = 14f
-            setPadding(20, 15, 20, 15)
-            setTextColor(if (isAi) 0xFF81C784.toInt() else 0xFFFFFFFF.toInt())
-        }
-        chatContainer.addView(tv)
-        scrollView.post { scrollView.fullScroll(View.FOCUS_DOWN) }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
