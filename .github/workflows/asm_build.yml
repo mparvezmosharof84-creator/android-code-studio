@@ -30,10 +30,10 @@ jobs:
       - name: Change Gradle wrapper permissions
         run: chmod +x ./gradlew
 
-      # Termux-এর সব ফাইল স্বয়ংক্রিয়ভাবে নতুন প্যাকেজ নামে রূপান্তর করা
-      - name: Auto Fix Termux Package Name
+      # শুধুমাত্র TERMUX_PACKAGE_NAME লাইনটি সুনির্দিষ্টভাবে পরিবর্তন করা
+      - name: Fix Termux Package Name
         run: |
-          find termux -type f \( -name "*.java" -o -name "*.kt" \) -exec sed -i 's/com.tom.rv2ide/com.androidai.studio/g' {} +
+          sed -i '/TERMUX_PACKAGE_NAME/s/com.tom.rv2ide/com.androidai.studio/g' termux/shared/src/main/java/com/termux/shared/termux/TermuxConstants.java
 
       - name: Create Missing Directories
         run: |
@@ -48,10 +48,9 @@ jobs:
           find core/app/build/outputs/apk/debug/ -name "*.apk" -exec cp {} release-apks/ \;
           ls -lh release-apks/
 
-      # কোনো জিপ ছাড়া সরাসরি রঅ APK রিলিজ করা
+      # সফলভাবে বিল্ড হলে সরাসরি রঅ APK রিলিজ করা
       - name: Release Direct APKs
         uses: softprops/action-gh-release@v2
-        if: always()
         with:
           tag_name: "v1.0.0-${{ github.run_number }}"
           name: "Android AI Studio v1.0.0"
