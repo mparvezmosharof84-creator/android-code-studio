@@ -7,6 +7,7 @@
   <!-- কোনো আপডেট চেকার যেন কাজ না করে -->
   <bool name="enable_update_checker">false</bool>
   <string name="update_check_url">""</string>
+  <string name="updater_check_url">""</string>
   
   <string name="asset_studio_title">Asset Studio</string>
   <string name="asset_studio_subtitle">3D &amp; UI Engine Studio</string>
