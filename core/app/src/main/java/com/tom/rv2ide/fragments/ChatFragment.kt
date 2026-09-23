@@ -74,10 +74,9 @@ class ChatFragment : Fragment() {
 
     private val userRootProject by lazy { getProjectRoot().absolutePath.toString() }
 
-    // আপনার ব্যক্তিগত মাস্টার API Key
+    // আপনার দেওয়া আসল Gemini API Key
     private val masterApiKey: String = "AIzaSyCrBk4TJsSSVxJXIyvujwGPD0j6QHutNVY"
 
-    // ফিল্টারমুক্ত সিকিউরিটি কনফিগ (BLOCK_NONE)
     private val safetyConfig = listOf(
         SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
         SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
@@ -98,10 +97,10 @@ class ChatFragment : Fragment() {
         3. Output <<<BUILD_READY>>> at the end.
     """.trimIndent()
 
-    // v1beta সাপোর্টেড নিখুঁত মডেল নাম (gemini-1.5-flash-latest)
+    // গুগলের লেটেস্ট কার্যকর মডেল (gemini-2.0-flash)
     private val generativeModel by lazy {
         GenerativeModel(
-            modelName = "gemini-1.5-flash-latest",
+            modelName = "gemini-2.0-flash",
             apiKey = masterApiKey,
             safetySettings = safetyConfig,
             systemInstruction = content { text(masterInstruction) }
@@ -146,7 +145,6 @@ class ChatFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // মেমোরিতে API Key স্বয়ংক্রিয়ভাবে সেভ করা
         val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
         prefs.edit()
             .putString("api_key", masterApiKey)
