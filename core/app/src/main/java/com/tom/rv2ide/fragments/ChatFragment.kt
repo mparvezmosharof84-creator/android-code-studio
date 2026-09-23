@@ -74,7 +74,7 @@ class ChatFragment : Fragment() {
 
     private val userRootProject by lazy { getProjectRoot().absolutePath.toString() }
 
-    // আপনার দেওয়া আসল Gemini API Key
+    // আপনার আসল Gemini API Key
     private val masterApiKey: String = "AIzaSyCrBk4TJsSSVxJXIyvujwGPD0j6QHutNVY"
 
     private val safetyConfig = listOf(
@@ -97,21 +97,10 @@ class ChatFragment : Fragment() {
         3. Output <<<BUILD_READY>>> at the end.
     """.trimIndent()
 
-    // গুগলের লেটেস্ট কার্যকর মডেল (gemini-2.0-flash)
-    private val generativeModel by lazy {
-        GenerativeModel(
-            modelName = "gemini-2.0-flash",
-            apiKey = masterApiKey,
-            safetySettings = safetyConfig,
-            systemInstruction = content { text(masterInstruction) }
-        )
-    }
-
     private val sharedPrefsListener =
         SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
             if (key == "code_completion_enabled") {
                 val isEnabled = prefs.getBoolean(key, true)
-                android.util.Log.d("ChatFragment", "Completion preference changed: $isEnabled")
                 lifecycleScope.launch {
                     handleCompletionStateChange(isEnabled)
                 }
@@ -260,8 +249,32 @@ class ChatFragment : Fragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val response = generativeModel.generateContent(prompt)
-                val replyText = response.text ?: ""
+                // গুগলের নির্দেশিত লেটেস্ট মডেলগুলোর অটো-ফলব্যাক লিস্ট
+                val modelsToTry = listOf("gemini-2.5-flash", "gemini-2.5-pro", "gemini-flash-latest")
+                var replyText = ""
+                var lastErr: Exception? = null
+
+                for (mName in modelsToTry) {
+                    try {
+                        val model = GenerativeModel(
+                            modelName = mName,
+                            apiKey = masterApiKey,
+                            safetySettings = safetyConfig,
+                            systemInstruction = content { text(masterInstruction) }
+                        )
+                        val res = model.generateContent(prompt)
+                        if (!res.text.isNullOrBlank()) {
+                            replyText = res.text!!
+                            break
+                        }
+                    } catch (e: Exception) {
+                        lastErr = e
+                    }
+                }
+
+                if (replyText.isBlank()) {
+                    throw lastErr ?: Exception("কোনো মডেল থেকে উত্তর পাওয়া যায়নি।")
+                }
 
                 val projectRoot = File(userRootProject)
                 val filePattern = Pattern.compile("<<<FILE:(.*?)>>>(.*?)<<<END_FILE>>>", Pattern.DOTALL)
