@@ -50,7 +50,7 @@ android {
 
   defaultConfig {
     applicationId = "com.tom.rv2ide"
-    // ভার্সন কোড অনেক বড় সংখ্যা দেওয়ায় আপডেট পপ-আপ চিরতরে বন্ধ হয়ে যাবে
+    // ভার্সন কোড অনেক বড় হওয়ায় আপডেট চেকার জীবনেও পপ-আপ দেখাবে না
     versionCode = 999999
     versionName = "99.0.0"
     vectorDrawables.useSupportLibrary = true
