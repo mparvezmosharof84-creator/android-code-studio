@@ -30,6 +30,14 @@ jobs:
       - name: Change Gradle wrapper permissions
         run: chmod +x ./gradlew
 
+      # ১. আগের মালিকের সব আপডেট লিঙ্ক ও রিমোট ইউআরএল চিরতরে ধ্বংস করা
+      - name: Erase All Update Checkers & Original Links
+        run: |
+          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" -o -name "*.json" \) -exec sed -i 's#https://raw.githubusercontent.com/AndroidCSOfficial.*#""#g' {} + || true
+          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" -o -name "*.json" \) -exec sed -i 's#https://api.github.com/repos/AndroidCSOfficial.*#""#g' {} + || true
+          find . -type f \( -name "*.java" -o -name "*.kt" \) -exec sed -i 's#t.me/rv2ide#t.me/#g' {} + || true
+          sed -i '/TERMUX_PACKAGE_NAME/s/com.androidai.studio/com.tom.rv2ide/g' termux/shared/src/main/java/com/termux/shared/termux/TermuxConstants.java || true
+
       - name: Create Missing Directories
         run: |
           mkdir -p core/app/build/intermediates/external_file_lib_dex_archives/debug/desugarDebugFileDependencies
@@ -43,6 +51,7 @@ jobs:
           find core/app/build/outputs/apk/debug/ -name "*.apk" -exec cp {} release-apks/ \;
           ls -lh release-apks/
 
+      # সরাসরি আসল রঅ APK রিলিজ করা
       - name: Release Direct APKs
         uses: softprops/action-gh-release@v2
         with:
