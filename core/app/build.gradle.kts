@@ -50,7 +50,6 @@ android {
 
   defaultConfig {
     applicationId = "com.tom.rv2ide"
-    // ভার্সন কোড অনেক বড় হওয়ায় আপডেট চেকার জীবনেও পপ-আপ দেখাবে না
     versionCode = 999999
     versionName = "99.0.0"
     vectorDrawables.useSupportLibrary = true
@@ -187,6 +186,10 @@ dependencies {
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
   implementation(files(rootProject.file("composite-builds/build-deps/libs/javapoet.jar")))
+
+  // মিসিং ওপেন-জেডিকে Javac ইনডেক্সার লাইব্রেরি যুক্ত করা হলো (যা ক্র্যাশ বন্ধ করবে)
+  implementation(projects.buildDeps.javac)
+  implementation(projects.buildDeps.googleJavaFormat)
 
   implementation(projects.core.projectdata)
   implementation(projects.ideconfigurations)
