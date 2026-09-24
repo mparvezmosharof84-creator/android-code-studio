@@ -49,7 +49,7 @@ import java.net.URL
 import java.util.regex.Pattern
 
 /**
- * Android AI Studio - Master AI Agent (Clean Google REST Engine)
+ * Android AI Studio - Master AI Agent (Gemini 3.8 / 3.7 Engine)
  * Creator & Owner: Parvez Mosharof
  */
 class ChatFragment : Fragment() {
@@ -76,7 +76,7 @@ class ChatFragment : Fragment() {
 
     private val userRootProject by lazy { getProjectRoot().absolutePath.toString() }
 
-    // আপনার নতুন চাবিটিকে সুরক্ষিতভাবে স্প্লিট করে রাখা হয়েছে
+    // আপনার নতুন সুরক্ষিত চাবি
     private val masterApiKey: String by lazy {
         val p1 = "AQ.Ab8RN6JlpsQNSkP"
         val p2 = "nhKkW-cFdpjr3dfdf"
@@ -240,9 +240,10 @@ class ChatFragment : Fragment() {
         }
     }
 
-    // গুগলের হুবহু অফিশিয়াল cURL স্পেসিফিকেশন কল (কোনো ভুল Authorization হেডার নেই)
+    // আপনার স্ক্রিনশটের আসল মডেলগুলো দিয়ে সরাসরি কল
     private fun callGeminiApiDirectly(prompt: String): String {
-        val models = listOf("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash")
+        // আপনার কনসোলের হুবহু সক্রিয় ৪টি মডেল
+        val models = listOf("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
         var lastException: Exception? = null
 
         for (modelName in models) {
