@@ -50,7 +50,6 @@ android {
 
   defaultConfig {
     applicationId = "com.tom.rv2ide"
-    // ভার্সন কোড ৯৯৯৯৯৯ দেওয়ায় আপডেট পপ-আপ চিরতরে বন্ধ থাকবে
     versionCode = 999999
     versionName = "99.0.0"
     vectorDrawables.useSupportLibrary = true
@@ -81,11 +80,16 @@ android {
     disable.addAll(arrayOf("VectorPath", "NestedWeights", "ContentDescription", "SmallSp"))
   }
 
+  // বিদেশি সার্টিফিকেট বাদ দেওয়ার কোড (যা Invalid এরর চিরতরে দূর করবে)
   packaging {
     resources {
       pickFirsts += "kotlin/**.kotlin_builtins"
       pickFirsts += "THIRD-PARTY"
       pickFirsts += "LICENSE"
+      excludes += "META-INF/*.SF"
+      excludes += "META-INF/*.DSA"
+      excludes += "META-INF/*.RSA"
+      excludes += "META-INF/*.MF"
     }
   }
 
@@ -187,7 +191,6 @@ dependencies {
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
 
-  // কম্পোজিট বিল্ডের সমস্ত JAR ফাইল নিরাপদভাবে যুক্ত করার কোড (যা ইনডেক্সিং ক্র্যাশ বন্ধ করবে)
   implementation(fileTree(rootProject.file("composite-builds/build-deps/libs")) { include("*.jar") })
 
   implementation(projects.core.projectdata)
