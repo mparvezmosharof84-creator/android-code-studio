@@ -49,7 +49,7 @@ import java.net.URL
 import java.util.regex.Pattern
 
 /**
- * Android AI Studio - Master AI Agent (Direct Modern REST Engine)
+ * Android AI Studio - Master AI Agent (Clean Google REST Engine)
  * Creator & Owner: Parvez Mosharof
  */
 class ChatFragment : Fragment() {
@@ -76,7 +76,7 @@ class ChatFragment : Fragment() {
 
     private val userRootProject by lazy { getProjectRoot().absolutePath.toString() }
 
-    // আপনার নতুন প্রজন্মের জেমিনি চাবি (স্প্লিট করে সুরক্ষিত রাখা)
+    // আপনার নতুন চাবিটিকে সুরক্ষিতভাবে স্প্লিট করে রাখা হয়েছে
     private val masterApiKey: String by lazy {
         val p1 = "AQ.Ab8RN6JlpsQNSkP"
         val p2 = "nhKkW-cFdpjr3dfdf"
@@ -240,7 +240,7 @@ class ChatFragment : Fragment() {
         }
     }
 
-    // সরাসরি গুগলের আধুনিক অফিসিয়াল REST API কল
+    // গুগলের হুবহু অফিশিয়াল cURL স্পেসিফিকেশন কল (কোনো ভুল Authorization হেডার নেই)
     private fun callGeminiApiDirectly(prompt: String): String {
         val models = listOf("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash")
         var lastException: Exception? = null
@@ -252,8 +252,6 @@ class ChatFragment : Fragment() {
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-                conn.setRequestProperty("x-goog-api-key", masterApiKey)
-                conn.setRequestProperty("Authorization", "Bearer $masterApiKey")
                 conn.connectTimeout = 30000
                 conn.readTimeout = 60000
                 conn.doOutput = true
@@ -291,7 +289,7 @@ class ChatFragment : Fragment() {
                         }
                     }
                 } else {
-                    lastException = Exception("গুগল রেসপন্স কোড: $responseCode\n$responseText")
+                    lastException = Exception("গুগল রেসপন্স: $responseCode - $responseText")
                 }
             } catch (e: Exception) {
                 lastException = e
