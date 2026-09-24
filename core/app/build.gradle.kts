@@ -50,10 +50,10 @@ android {
 
   defaultConfig {
     applicationId = "com.tom.rv2ide"
-    // ভার্সন কোড ৯৯৯৯৯৯ দেওয়ায় কোনোদিন আপডেটের পপ-আপ আসবে না
     versionCode = 999999
     versionName = "99.0.0"
     vectorDrawables.useSupportLibrary = true
+    multiDexEnabled = true
   }
   
   experimentalProperties["android.experimental.enableGlobalSynthetics"] = true
@@ -81,7 +81,6 @@ android {
     disable.addAll(arrayOf("VectorPath", "NestedWeights", "ContentDescription", "SmallSp"))
   }
 
-  // ক্ষতিকর লাইনটি মুছে আগের আসল বৈধ প্যাকেজিং ফিরিয়ে দেওয়া হলো
   packaging {
     resources {
       pickFirsts += "kotlin/**.kotlin_builtins"
@@ -185,9 +184,14 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.common.kotlin)
 
+  // কম্পোজিট ডিপেন্ডেন্সি
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
   implementation(files(rootProject.file("composite-builds/build-deps/libs/javapoet.jar")))
+
+  // মিসিং OpenJDK Javac ক্লাস ডেক্স করার জন্য সরাসরি লোড
+  compileOnly(files(rootProject.file("composite-builds/build-deps/javac/build/libs/javac.jar")))
+  implementation(files(rootProject.file("composite-builds/build-deps/javac/build/libs/javac.jar")))
 
   implementation(projects.core.projectdata)
   implementation(projects.ideconfigurations)
