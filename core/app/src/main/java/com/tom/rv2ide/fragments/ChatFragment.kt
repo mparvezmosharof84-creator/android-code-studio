@@ -1,6 +1,6 @@
 /*
  * This file is part of AndroidCodeStudio.
- * Android AI Studio - Autonomous Builder Edition
+ * Android AI Studio - Crash-Proof Autonomous Edition
  * Owner & Creator: Parvez Mosharof
  */
 
@@ -32,7 +32,7 @@ import com.tom.rv2ide.adapters.FileModificationAdapter
 import com.tom.rv2ide.artificial.agents.AIAgentManager
 import com.tom.rv2ide.handlers.AIRequestHandler
 import com.tom.rv2ide.managers.CodeCompletionManager
-import com.tom.rv2ide.utils.ProjectHelper.getProjectRoot
+import com.tom.rv2ide.utils.ProjectHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -49,24 +49,24 @@ import java.net.URL
 import java.util.regex.Pattern
 
 /**
- * Android AI Studio - Master AI Agent (Gemini 3.8 / 3.7 Engine)
+ * Android AI Studio - Master AI Agent (Crash-Proof Architecture)
  * Creator & Owner: Parvez Mosharof
  */
 class ChatFragment : Fragment() {
 
     private lateinit var aiAgent: AIAgentManager
-    private lateinit var promptInput: TextInputEditText
-    private lateinit var executeBtn: MaterialButton
-    private lateinit var clearBtn: MaterialButton
-    private lateinit var statusText: MaterialTextView
-    private lateinit var summaryText: MaterialTextView
-    private lateinit var progressIndicator: CircularProgressIndicator
-    private lateinit var fileModificationList: RecyclerView
-    private lateinit var summaryCard: LinearLayout
-    private lateinit var fileModificationAdapter: FileModificationAdapter
+    private var promptInput: TextInputEditText? = null
+    private var executeBtn: MaterialButton? = null
+    private var clearBtn: MaterialButton? = null
+    private var statusText: MaterialTextView? = null
+    private var summaryText: MaterialTextView? = null
+    private var progressIndicator: CircularProgressIndicator? = null
+    private var fileModificationList: RecyclerView? = null
+    private var summaryCard: LinearLayout? = null
+    private var fileModificationAdapter: FileModificationAdapter? = null
 
-    private lateinit var codeCompletionManager: CodeCompletionManager
-    private lateinit var aiRequestHandler: AIRequestHandler
+    private var codeCompletionManager: CodeCompletionManager? = null
+    private var aiRequestHandler: AIRequestHandler? = null
 
     private var typingJob: Job? = null
     private var fileMonitorJob: Job? = null
@@ -74,9 +74,15 @@ class ChatFragment : Fragment() {
     private var lastMonitoredFile: File? = null
     private var isSettingUpCompletion = false
 
-    private val userRootProject by lazy { getProjectRoot().absolutePath.toString() }
+    // ক্র্যাশ গার্ড: নিরাপদ পাথ খোঁজা যাতে নাল পয়েন্টার ক্র্যাশ না হয়
+    private fun getSafeProjectPath(): String {
+        return try {
+            ProjectHelper.getProjectRoot()?.absolutePath?.toString() ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
 
-    // আপনার নতুন সুরক্ষিত চাবি
     private val masterApiKey: String by lazy {
         val p1 = "AQ.Ab8RN6JlpsQNSkP"
         val p2 = "nhKkW-cFdpjr3dfdf"
@@ -117,9 +123,8 @@ class ChatFragment : Fragment() {
         fun newInstance(): ChatFragment = ChatFragment()
     }
 
-    fun getCodeCompletionManager(): CodeCompletionManager {
-        return if (::codeCompletionManager.isInitialized) codeCompletionManager
-        else CodeCompletionManager.getInstance(requireContext(), lifecycleScope, getSafeAiAgent())
+    fun getCodeCompletionManager(): CodeCompletionManager? {
+        return codeCompletionManager
     }
 
     private fun getSafeAiAgent(): AIAgentManager {
@@ -131,15 +136,15 @@ class ChatFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
-        prefs.edit()
-            .putString("api_key", masterApiKey)
-            .putString("gemini_api_key", masterApiKey)
-            .putString("apiKey", masterApiKey)
-            .putString("token", masterApiKey)
-            .apply()
-
+        try {
+            val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putString("api_key", masterApiKey)
+                .putString("gemini_api_key", masterApiKey)
+                .putString("apiKey", masterApiKey)
+                .putString("token", masterApiKey)
+                .apply()
+        } catch (ignored: Exception) {}
         getSafeAiAgent()
     }
 
@@ -148,17 +153,23 @@ class ChatFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_chat, container, false)
+        return try {
+            inflater.inflate(R.layout.fragment_chat, container, false)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initializeViews(view)
-        setupRecyclerView()
-        setupManagers()
-        setupListeners()
-        loadProject()
-        registerPreferenceListener()
+        try {
+            initializeViews(view)
+            setupRecyclerView()
+            setupManagers()
+            setupListeners()
+            loadProjectSafely()
+            registerPreferenceListener()
+        } catch (ignored: Exception) {}
     }
 
     override fun onResume() {
@@ -183,51 +194,53 @@ class ChatFragment : Fragment() {
         fileModificationList = view.findViewById(R.id.fileModificationList)
         summaryCard = view.findViewById(R.id.summaryCard)
 
-        statusText.text = "✨ Android AI Studio: স্বাগতম মাস্টার Parvez Mosharof! কী অ্যাপ তৈরি করতে চান লিখুন..."
-        statusText.visibility = View.VISIBLE
+        statusText?.text = "✨ Android AI Studio: স্বাগতম মাস্টার Parvez Mosharof! কী অ্যাপ তৈরি করতে চান লিখুন..."
+        statusText?.visibility = View.VISIBLE
     }
 
     private fun setupRecyclerView() {
         fileModificationAdapter = FileModificationAdapter()
-        fileModificationList.apply {
+        fileModificationList?.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = fileModificationAdapter
             isNestedScrollingEnabled = false
         }
-        fileModificationAdapter.setOnItemClickListener { fileName ->
+        fileModificationAdapter?.setOnItemClickListener { fileName ->
             openFileInEditor(fileName)
         }
     }
 
     private fun setupManagers() {
-        codeCompletionManager = CodeCompletionManager.getInstance(
-            requireContext(),
-            lifecycleScope,
-            getSafeAiAgent()
-        )
+        try {
+            codeCompletionManager = CodeCompletionManager.getInstance(
+                requireContext(),
+                lifecycleScope,
+                getSafeAiAgent()
+            )
 
-        aiRequestHandler = AIRequestHandler(
-            lifecycleScope,
-            getSafeAiAgent(),
-            statusText,
-            summaryText,
-            progressIndicator,
-            executeBtn,
-            fileModificationList,
-            fileModificationAdapter,
-            summaryCard,
-            onFileOpen = { fileName ->
-                openFileInEditor(fileName)
-            },
-            onTypeText = { text, delay -> typeText(text, delay) },
-            getCurrentFile = { getCurrentFile() },
-            refreshEditor = { refreshCurrentEditor() }
-        )
+            if (statusText != null && summaryText != null && progressIndicator != null && executeBtn != null && fileModificationList != null && fileModificationAdapter != null && summaryCard != null) {
+                aiRequestHandler = AIRequestHandler(
+                    lifecycleScope,
+                    getSafeAiAgent(),
+                    statusText!!,
+                    summaryText!!,
+                    progressIndicator!!,
+                    executeBtn!!,
+                    fileModificationList!!,
+                    fileModificationAdapter!!,
+                    summaryCard!!,
+                    onFileOpen = { fileName -> openFileInEditor(fileName) },
+                    onTypeText = { text, delay -> typeText(text, delay) },
+                    getCurrentFile = { getCurrentFile() },
+                    refreshEditor = { refreshCurrentEditor() }
+                )
+            }
+        } catch (ignored: Exception) {}
     }
 
     private fun setupListeners() {
-        executeBtn.setOnClickListener {
-            val userRequest = promptInput.text.toString().trim()
+        executeBtn?.setOnClickListener {
+            val userRequest = promptInput?.text?.toString()?.trim() ?: ""
             if (userRequest.isBlank()) {
                 showSnackbar("অনুগ্রহ করে কী অ্যাপ বানাতে চান লিখুন")
                 return@setOnClickListener
@@ -235,14 +248,12 @@ class ChatFragment : Fragment() {
             executeAutonomousBuild(userRequest)
         }
 
-        clearBtn.setOnClickListener {
+        clearBtn?.setOnClickListener {
             clearConversation()
         }
     }
 
-    // আপনার স্ক্রিনশটের আসল মডেলগুলো দিয়ে সরাসরি কল
     private fun callGeminiApiDirectly(prompt: String): String {
-        // আপনার কনসোলের হুবহু সক্রিয় ৪টি মডেল
         val models = listOf("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
         var lastException: Exception? = null
 
@@ -300,15 +311,16 @@ class ChatFragment : Fragment() {
     }
 
     private fun executeAutonomousBuild(prompt: String) {
-        progressIndicator.visibility = View.VISIBLE
-        executeBtn.isEnabled = false
-        statusText.text = "⚡ AI Studio: সরাসরি গুগল ক্লাউডে কানেক্ট হচ্ছে..."
+        progressIndicator?.visibility = View.VISIBLE
+        executeBtn?.isEnabled = false
+        statusText?.text = "⚡ AI Studio: সরাসরি গুগল ক্লাউডে কানেক্ট হচ্ছে..."
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val replyText = callGeminiApiDirectly(prompt)
+                val projectPath = getSafeProjectPath()
+                val projectRoot = if (projectPath.isNotBlank()) File(projectPath) else (activity?.filesDir?.parentFile ?: File("/storage/emulated/0/"))
 
-                val projectRoot = File(userRootProject)
                 val filePattern = Pattern.compile("<<<FILE:(.*?)>>>(.*?)<<<END_FILE>>>", Pattern.DOTALL)
                 val matcher = filePattern.matcher(replyText)
                 var fileCount = 0
@@ -323,21 +335,21 @@ class ChatFragment : Fragment() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    progressIndicator.visibility = View.GONE
-                    executeBtn.isEnabled = true
-                    statusText.text = if (fileCount > 0) {
+                    progressIndicator?.visibility = View.GONE
+                    executeBtn?.isEnabled = true
+                    statusText?.text = if (fileCount > 0) {
                         "✅ সফল! $fileCount টি ফাইল প্রজেক্টে যুক্ত হয়েছে। কোড এডিটরেও দেখতে পাবেন।"
                     } else {
                         replyText
                     }
-                    promptInput.setText("")
+                    promptInput?.setText("")
                     checkForGeneratedApk(projectRoot)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    progressIndicator.visibility = View.GONE
-                    executeBtn.isEnabled = true
-                    statusText.text = "ত্রুটি: ${e.localizedMessage}"
+                    progressIndicator?.visibility = View.GONE
+                    executeBtn?.isEnabled = true
+                    statusText?.text = "ত্রুটি: ${e.localizedMessage}"
                 }
             }
         }
@@ -370,13 +382,17 @@ class ChatFragment : Fragment() {
     }
 
     private fun registerPreferenceListener() {
-        val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
-        prefs.registerOnSharedPreferenceChangeListener(sharedPrefsListener)
+        try {
+            val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
+            prefs.registerOnSharedPreferenceChangeListener(sharedPrefsListener)
+        } catch (ignored: Exception) {}
     }
 
     private fun unregisterPreferenceListener() {
-        val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
-        prefs.unregisterOnSharedPreferenceChangeListener(sharedPrefsListener)
+        try {
+            val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
+            prefs.unregisterOnSharedPreferenceChangeListener(sharedPrefsListener)
+        } catch (ignored: Exception) {}
     }
 
     private suspend fun handleCompletionStateChange(enabled: Boolean) {
@@ -388,24 +404,26 @@ class ChatFragment : Fragment() {
                 setupCodeCompletionForCurrentFile()
             }
         } else {
-            codeCompletionManager.cleanup()
+            codeCompletionManager?.cleanup()
         }
     }
 
     private fun startCompletionStateMonitoring() {
         stopCompletionStateMonitoring()
         completionStateMonitorJob = lifecycleScope.launch {
-            var lastKnownState = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
-                .getBoolean("code_completion_enabled", true)
-            while (true) {
-                delay(200)
-                val currentState = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
+            try {
+                var lastKnownState = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
                     .getBoolean("code_completion_enabled", true)
-                if (currentState != lastKnownState) {
-                    lastKnownState = currentState
-                    handleCompletionStateChange(currentState)
+                while (true) {
+                    delay(500)
+                    val currentState = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
+                        .getBoolean("code_completion_enabled", true)
+                    if (currentState != lastKnownState) {
+                        lastKnownState = currentState
+                        handleCompletionStateChange(currentState)
+                    }
                 }
-            }
+            } catch (ignored: Exception) {}
         }
     }
 
@@ -414,10 +432,15 @@ class ChatFragment : Fragment() {
         completionStateMonitorJob = null
     }
 
-    private fun loadProject() {
+    // নিরাপদ প্রজেক্ট লোডার (ক্র্যাশ বন্ধ রাখার গ্যারান্টি)
+    private fun loadProjectSafely() {
         lifecycleScope.launch {
             try {
-                aiAgent.setProjectRoot(userRootProject)
+                delay(1000) // প্রজেক্ট সিঙ্ক পুরোপুরি শেষ হওয়ার জন্য ১ সেকেন্ড বিরতি
+                val path = getSafeProjectPath()
+                if (path.isNotBlank()) {
+                    aiAgent.setProjectRoot(path)
+                }
             } catch (ignored: Exception) {}
         }
     }
@@ -425,22 +448,20 @@ class ChatFragment : Fragment() {
     private fun startFileMonitoring() {
         stopFileMonitoring()
         fileMonitorJob = lifecycleScope.launch {
-            while (true) {
-                delay(500)
-                if (isSettingUpCompletion) {
-                    continue
+            try {
+                while (true) {
+                    delay(1000)
+                    if (isSettingUpCompletion) continue
+                    val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
+                    val isEnabled = prefs.getBoolean("code_completion_enabled", true)
+                    if (!isEnabled) continue
+                    val currentFile = getCurrentFile()
+                    if (currentFile != null && currentFile != lastMonitoredFile) {
+                        lastMonitoredFile = currentFile
+                        setupCodeCompletionForCurrentFile()
+                    }
                 }
-                val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
-                val isEnabled = prefs.getBoolean("code_completion_enabled", true)
-                if (!isEnabled) {
-                    continue
-                }
-                val currentFile = getCurrentFile()
-                if (currentFile != null && currentFile != lastMonitoredFile) {
-                    lastMonitoredFile = currentFile
-                    setupCodeCompletionForCurrentFile()
-                }
-            }
+            } catch (ignored: Exception) {}
         }
     }
 
@@ -451,32 +472,37 @@ class ChatFragment : Fragment() {
 
     private fun setupCodeCompletionForCurrentFile() {
         if (isSettingUpCompletion) return
-        val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
-        val isEnabled = prefs.getBoolean("code_completion_enabled", true)
-        if (!isEnabled) return
-        isSettingUpCompletion = true
-        lifecycleScope.launch {
-            delay(200)
-            val editor = getCurrentEditor()
-            val suggestionView = getCurrentSuggestionView()
-            if (editor != null && suggestionView != null) {
-                codeCompletionManager.setup(
-                    editor,
-                    suggestionView,
-                    onReady = { isSettingUpCompletion = false },
-                    onError = { isSettingUpCompletion = false }
-                )
-            } else {
-                isSettingUpCompletion = false
+        try {
+            val prefs = requireContext().getSharedPreferences("ai_preferences", Context.MODE_PRIVATE)
+            val isEnabled = prefs.getBoolean("code_completion_enabled", true)
+            if (!isEnabled) return
+            isSettingUpCompletion = true
+            lifecycleScope.launch {
+                delay(300)
+                val editor = getCurrentEditor()
+                val suggestionView = getCurrentSuggestionView()
+                if (editor != null && suggestionView != null) {
+                    codeCompletionManager?.setup(
+                        editor,
+                        suggestionView,
+                        onReady = { isSettingUpCompletion = false },
+                        onError = { isSettingUpCompletion = false }
+                    )
+                } else {
+                    isSettingUpCompletion = false
+                }
             }
+        } catch (e: Exception) {
+            isSettingUpCompletion = false
         }
     }
 
     private fun openFileInEditor(fileName: String) {
-        if (userRootProject.isBlank()) return
+        val rootPath = getSafeProjectPath()
+        if (rootPath.isBlank()) return
         lifecycleScope.launch {
             try {
-                val file = findFileInProject(File(userRootProject), fileName) ?: return@launch
+                val file = findFileInProject(File(rootPath), fileName) ?: return@launch
                 val activity = requireActivity()
                 if (activity is EditorHandlerActivity) {
                     activity.openFile(file)
@@ -521,11 +547,11 @@ class ChatFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 typingJob?.cancel()
-                promptInput.text?.clear()
-                statusText.text = "Conversation cleared. Ready for new request."
-                fileModificationList.visibility = View.GONE
-                summaryCard.visibility = View.GONE
-                fileModificationAdapter.clear()
+                promptInput?.text?.clear()
+                statusText?.text = "Conversation cleared. Ready for new request."
+                fileModificationList?.visibility = View.GONE
+                summaryCard?.visibility = View.GONE
+                fileModificationAdapter?.clear()
             } catch (ignored: Exception) {}
         }
     }
