@@ -50,6 +50,7 @@ android {
 
   defaultConfig {
     applicationId = "com.tom.rv2ide"
+    // ভার্সন কোড ৯৯৯৯৯৯ দেওয়ায় আপডেট পপ-আপ চিরতরে বন্ধ থাকবে
     versionCode = 999999
     versionName = "99.0.0"
     vectorDrawables.useSupportLibrary = true
@@ -185,11 +186,9 @@ dependencies {
 
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
-  implementation(files(rootProject.file("composite-builds/build-deps/libs/javapoet.jar")))
 
-  // মিসিং ওপেন-জেডিকে Javac ইনডেক্সার লাইব্রেরি যুক্ত করা হলো (যা ক্র্যাশ বন্ধ করবে)
-  implementation(projects.buildDeps.javac)
-  implementation(projects.buildDeps.googleJavaFormat)
+  // কম্পোজিট বিল্ডের সমস্ত JAR ফাইল নিরাপদভাবে যুক্ত করার কোড (যা ইনডেক্সিং ক্র্যাশ বন্ধ করবে)
+  implementation(fileTree(rootProject.file("composite-builds/build-deps/libs")) { include("*.jar") })
 
   implementation(projects.core.projectdata)
   implementation(projects.ideconfigurations)
