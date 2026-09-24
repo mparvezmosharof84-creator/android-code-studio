@@ -50,6 +50,7 @@ android {
 
   defaultConfig {
     applicationId = "com.tom.rv2ide"
+    // ভার্সন কোড ৯৯৯৯৯৯ দেওয়ায় কোনোদিন আপডেটের পপ-আপ আসবে না
     versionCode = 999999
     versionName = "99.0.0"
     vectorDrawables.useSupportLibrary = true
@@ -80,16 +81,12 @@ android {
     disable.addAll(arrayOf("VectorPath", "NestedWeights", "ContentDescription", "SmallSp"))
   }
 
-  // বিদেশি সার্টিফিকেট বাদ দেওয়ার কোড (যা Invalid এরর চিরতরে দূর করবে)
+  // ক্ষতিকর লাইনটি মুছে আগের আসল বৈধ প্যাকেজিং ফিরিয়ে দেওয়া হলো
   packaging {
     resources {
       pickFirsts += "kotlin/**.kotlin_builtins"
       pickFirsts += "THIRD-PARTY"
       pickFirsts += "LICENSE"
-      excludes += "META-INF/*.SF"
-      excludes += "META-INF/*.DSA"
-      excludes += "META-INF/*.RSA"
-      excludes += "META-INF/*.MF"
     }
   }
 
@@ -190,8 +187,7 @@ dependencies {
 
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
-
-  implementation(fileTree(rootProject.file("composite-builds/build-deps/libs")) { include("*.jar") })
+  implementation(files(rootProject.file("composite-builds/build-deps/libs/javapoet.jar")))
 
   implementation(projects.core.projectdata)
   implementation(projects.ideconfigurations)
