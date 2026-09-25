@@ -181,7 +181,7 @@ internal object WorkspaceModelBuilder {
       ProjectType.Gradle,
       ProjectType.Unknown -> transform(root.asGradleProject())
 
-      // এখানেও transformSafe দেওয়া হলো (যাতে সাবমডিউল কোনোদিন ক্র্যাশ না করে)
+      // সাবমডিউলের জন্যও ক্র্যাশ-প্রুফ সেফ মেথড
       ProjectType.Android -> transformSafe(root.asAndroidProject())
       ProjectType.Java -> transform(root.asJavaProject())
     }
