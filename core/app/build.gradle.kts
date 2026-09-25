@@ -50,8 +50,9 @@ android {
 
   defaultConfig {
     applicationId = "com.tom.rv2ide"
-    versionCode = 999999
-    versionName = "99.0.0"
+    // নতুন ভার্সন কোড ২০০০ (যাতে কোনো পুরনো ক্যাশ না থাকে)
+    versionCode = 2000
+    versionName = "2.0.0"
     vectorDrawables.useSupportLibrary = true
     multiDexEnabled = true
   }
@@ -184,14 +185,9 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.common.kotlin)
 
-  // কম্পোজিট ডিপেন্ডেন্সি
   implementation(libs.composite.appintro)
   implementation(libs.composite.desugaringCore)
   implementation(files(rootProject.file("composite-builds/build-deps/libs/javapoet.jar")))
-
-  // মিসিং OpenJDK Javac ক্লাস ডেক্স করার জন্য সরাসরি লোড
-  compileOnly(files(rootProject.file("composite-builds/build-deps/javac/build/libs/javac.jar")))
-  implementation(files(rootProject.file("composite-builds/build-deps/javac/build/libs/javac.jar")))
 
   implementation(projects.core.projectdata)
   implementation(projects.ideconfigurations)
