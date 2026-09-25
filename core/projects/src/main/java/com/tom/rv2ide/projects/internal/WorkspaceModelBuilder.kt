@@ -35,6 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Transforms project models from tooling API to the projects API.
+ * Crash-Proof Architecture by Parvez Mosharof
  *
  * @author Akash Yadav
  */
@@ -55,7 +56,7 @@ internal object WorkspaceModelBuilder {
 
       val rootProject = when (project.getType().get()) {
         ProjectType.Gradle -> transform(project.asGradleProject())
-        ProjectType.Android -> transform(project.asAndroidProject())
+        ProjectType.Android -> transformSafe(project.asAndroidProject())
         else -> throw IllegalStateException(
           "Root project must be either an Android project or a Gradle project"
         )
@@ -82,11 +83,27 @@ internal object WorkspaceModelBuilder {
       projectDir = metadata.projectDir,
       buildDir = metadata.buildDir,
       buildScript = metadata.buildScript,
-
-      // The list will never change, we could make these thread-safe with
-      // CopyOnWriteArrayList
       tasks = CopyOnWriteArrayList(rootProject.getTasks().get() ?: listOf()),
     )
+  }
+
+  // ক্র্যাশ-প্রুফ সেফটি মেথড: CacheFSInfo না পেলেও অ্যাপ আর ক্র্যাশ করবে না
+  private fun transformSafe(project: IAndroidProject): GradleProject {
+    return try {
+      transform(project)
+    } catch (t: Throwable) {
+      log.warn("CacheFSInfo / Javac missing fallback, creating safe project model", t)
+      val metadata = project.getMetadata().get()
+      GradleProject(
+        name = metadata.name ?: IProject.PROJECT_UNKNOWN,
+        description = "",
+        path = metadata.projectPath,
+        projectDir = metadata.projectDir,
+        buildDir = metadata.buildDir,
+        buildScript = metadata.buildScript,
+        tasks = CopyOnWriteArrayList(project.getTasks().get() ?: listOf())
+      )
+    }
   }
 
   private fun transform(
@@ -143,7 +160,11 @@ internal object WorkspaceModelBuilder {
   private fun transform(modules: List<BasicProjectMetadata>, root: IProject): List<GradleProject> {
     return mutableListOf<GradleProject>().apply {
       for (module in modules) {
-        add(createProject(module, root))
+        try {
+          add(createProject(module, root))
+        } catch (t: Throwable) {
+          log.warn("Skipping failed module transform: ${module.projectPath}", t)
+        }
       }
     }
   }
@@ -160,7 +181,7 @@ internal object WorkspaceModelBuilder {
       ProjectType.Gradle,
       ProjectType.Unknown -> transform(root.asGradleProject())
 
-      ProjectType.Android -> transform(root.asAndroidProject())
+      ProjectType.Android -> transformSafe(root.asAndroidProject())
       ProjectType.Java -> transform(root.asJavaProject())
     }
   }
