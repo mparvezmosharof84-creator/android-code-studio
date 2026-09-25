@@ -43,12 +43,12 @@ jobs:
           find core/app/build/outputs/apk/debug/ -name "*.apk" -exec cp {} release-apks/ \;
           ls -lh release-apks/
 
-      # সরাসরি আসল রঅ APK রিলিজ করা
+      # সম্পূর্ণ নতুন স্পষ্ট নামে রিলিজ তৈরি করা যাতে পুরনো APK-র সাথে কোনো বিভ্রান্তি না হয়
       - name: Release Direct APKs
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.0.0-${{ github.run_number }}"
-          name: "Android AI Studio v1.0.0"
+          tag_name: "v2.0.0-FINAL-${{ github.run_number }}"
+          name: "Android AI Studio v2.0.0 (Crash Fixed)"
           draft: false
           prerelease: false
           files: release-apks/*.apk
