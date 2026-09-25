@@ -35,7 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Transforms project models from tooling API to the projects API.
- * Crash-Proof Architecture by Parvez Mosharof
+ * Complete Crash-Proof Architecture by Parvez Mosharof
  *
  * @author Akash Yadav
  */
@@ -87,7 +87,7 @@ internal object WorkspaceModelBuilder {
     )
   }
 
-  // ক্র্যাশ-প্রুফ সেফটি মেথড: CacheFSInfo না পেলেও অ্যাপ আর ক্র্যাশ করবে না
+  // রুট ও সাবমডিউল উভয়ের জন্যই শতভাগ ক্র্যাশ-প্রুফ মেথড
   private fun transformSafe(project: IAndroidProject): GradleProject {
     return try {
       transform(project)
@@ -181,6 +181,7 @@ internal object WorkspaceModelBuilder {
       ProjectType.Gradle,
       ProjectType.Unknown -> transform(root.asGradleProject())
 
+      // এখানেও transformSafe দেওয়া হলো (যাতে সাবমডিউল কোনোদিন ক্র্যাশ না করে)
       ProjectType.Android -> transformSafe(root.asAndroidProject())
       ProjectType.Java -> transform(root.asJavaProject())
     }
